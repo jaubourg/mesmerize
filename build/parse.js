@@ -1,6 +1,6 @@
 "use strict";
 
-const rBytes = /((?:[0-9a-f]{2})+)|(XX)|'([^']+)'|\[([^\]]+)\]|\s+|(.)/gi;
+const rBytes = /((?:[0-9a-f]{2})+)|(\.\.)|'([^']+)'|\[([^\]]+)\]|\s+|(.)/gi;
 
 function parseOne( expression, mimetype, map ) {
 	let test;

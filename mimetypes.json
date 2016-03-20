@@ -4,8 +4,8 @@
 	,
 	"image/jpeg": [
 		"ffd8ffdb",
-		"ffd8XXXX 'Exif' 0001",
-		"ffd8XXXX 'JFIF' 0000"
+		"ffd8.... 'Exif' 0001",
+		"ffd8.... 'JFIF' 0000"
 	]
 	,
 	"image/png":
