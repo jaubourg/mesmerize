@@ -25,6 +25,9 @@
 	"image/webp":
 		"'RIFF....WEBP'"
 	,
+	"image/x-icon":
+		"0000 0100"
+	,
 	"text/html":
 		"'<!DOCTYPE' [ \f\n\t\r]"
 	,
