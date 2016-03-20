@@ -1,0 +1,22 @@
+{
+	"name": "mesmerize",
+	"version": "0.0.0-pre",
+	"description": "identify files using magic numbers",
+	"author": "Julian Aubourg <j@ubourg.net> (http://jaubourg.net/)",
+	"license": {
+		"type": "MIT",
+		"url": "http://www.opensource.org/licenses/mit-license.php"
+	},
+	"main": "index.js",
+	"homepage": "https://github.com/jaubourg/mesmerize",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/jaubourg/mesmerize.git"
+	},
+	"bugs": {
+		"url": "https://github.com/jaubourg/mesmerize/issues"
+	},
+	"engine": {
+		"node": ">=4.0.0"
+	}
+}

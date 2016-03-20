@@ -1,0 +1,27 @@
+{
+	"image/gif":
+		"'GIF8' [79] 'a'"
+	,
+	"image/jpeg": [
+		"ffd8ffdb",
+		"ffd8XXXX 'Exif' 0001",
+		"ffd8XXXX 'JFIF' 0000"
+	]
+	,
+	"image/png":
+		"89 'PNG\r\n' 1a '\n'"
+	,
+	"image/tiff": [
+		"4d4d 002a",
+		"4949 2a00"
+	]
+	,
+	"image/webp":
+		"'RIFF....WEBP'"
+	,
+	"text/html":
+		"'<!DOCTYPE' [ \f\n\t\r]"
+	,
+	"text/xml":
+		"'<?xml' [ \f\n\t\r]"
+}
