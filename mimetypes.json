@@ -36,4 +36,10 @@
 	,
 	"text/xml":
 		"'<?xml' [ \f\n\t\r]"
+	,
+	"video/mp4": [
+		"'....ftyp3gp5'",
+		"'....ftypMSNV'",
+		"'....ftypisom'"
+	]
 }
