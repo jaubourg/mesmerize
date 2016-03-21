@@ -4,18 +4,22 @@ function dataEncode( key ) {
 	return typeof key === "number" ? `0x${key.toString( 16 )}` : JSON.stringify( key );
 }
 
-function deepEqual( array1, array2 ) {
-	const type1 = typeof array1;
-	const type2 = typeof array2;
-	const isArray = Array.isArray( array1 );
-	if ( type1 !== type2 || isArray !== Array.isArray( array2 ) ) {
+function deepEqual( base, other ) {
+	if ( !base ) {
+		return !other;
+	}
+	if ( !other ) {
 		return false;
 	}
-	if ( !isArray ) {
-		return array1 === array2;
+	const type = typeof base;
+	if ( typeof other !== type ) {
+		return false;
 	}
-	return array1.isMap === array2.isMap && array1.length === array2.length && array1.find( function( value, index ) {
-		return !deepEqual( value, array2[ index ] );
+	if ( type !== "object" ) {
+		return base === other;
+	}
+	return base.length === other.length && base.find( function( value, index ) {
+		return !deepEqual( value, other[ index ] );
 	} ) === undefined;
 }
 
@@ -40,37 +44,41 @@ function encode( data, tab ) {
 	return data.id ? `_${data.id}` : encode( data.value, tab );
 }
 
-module.exports = function( array ) {
+module.exports = function( data ) {
 	const existing = [];
 	const findExistingSet = new Map();
-	const last = ( function toString( array ) {
-		const isArray = Array.isArray( array );
-		if ( isArray ) {
-			const isMap = Array.isArray( array[ 0 ] );
-			array = array.map( toString );
-			array.isMap = isMap;
-		} else if ( typeof array !== "string" ) {
-			return dataEncode( array );
-		} else {
-			array = JSON.stringify( array );
+	const last = ( function toString( item ) {
+		const isArray = Array.isArray( item );
+		const type = typeof item;
+		if ( !isArray && type !== "string" ) {
+			return dataEncode( item );
 		}
-		let existingSet = findExistingSet.get( array.length );
+		const key = `${type}-${typeof item[ 0 ]}-${item.length}`;
+		let existingSet = findExistingSet.get( key );
 		if ( !existingSet ) {
-			findExistingSet.set( array.length, ( existingSet = new Set() ) );
+			findExistingSet.set( key, ( existingSet = new Set() ) );
 		}
-		for ( let item of existingSet ) {
-			if ( deepEqual( array, item.value ) ) {
-				item.multiple = true;
-				return item;
+		for ( let previous of existingSet ) {
+			if ( deepEqual( item, previous.original ) ) {
+				previous.multiple = true;
+				return previous;
 			}
 		}
-		const data = {
-			value: array
+		let transformed;
+		if ( isArray ) {
+			transformed = item.map( toString );
+			transformed.isMap = Array.isArray( item[ 0 ] );
+		} else {
+			transformed = JSON.stringify( item );
+		}
+		const output = {
+			original: item,
+			value: transformed
 		};
-		existing.push( data );
-		existingSet.add( data );
-		return data;
-	} )( array );
+		existing.push( output );
+		existingSet.add( output );
+		return output;
+	} )( data );
 	let id = 0;
 	return `"use strict";\n\n` +
 		existing.filter( function( item ) {
