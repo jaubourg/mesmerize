@@ -41,15 +41,15 @@ function expand( map, propagate ) {
 	return newMap;
 }
 
-// Utility
+// Check all terminal nodes are of the same type
 function typeCheck( type ) {
-	return function check( map ) {
-		if ( map instanceof Map ) {
-			const thisType = map.get( true );
-			if ( thisType && thisType !== type ) {
+	return function check( value, key ) {
+		if ( key === true ) {
+			if ( value !== type ) {
 				throw "FAIL";
 			}
-			map.forEach( check );
+		} else {
+			value.forEach( check );
 		}
 	};
 }
@@ -74,6 +74,31 @@ function cut( map ) {
 	return newMap;
 }
 
+// Transform to arrays
+function toArrays( map ) {
+	if ( !( map instanceof Map ) ) {
+		return map;
+	}
+	const output = [];
+	map.forEach( function( value, key ) {
+		const keys = [];
+		while ( value instanceof Map && value.size === 1 ) {
+			const next = value.entries().next().value;
+			if ( next[ 0 ] !== true ) {
+				keys.push( next[ 0 ] );
+			}
+			value = next[ 1 ];
+		}
+		value = toArrays( value );
+		if ( keys.length ) {
+			keys.push( value );
+			value = keys;
+		}
+		output.push( [ key, value ] );
+	} );
+	return output;
+}
+
 module.exports = function( map ) {
-	return cut( expand( map ) );
+	return toArrays( cut( expand( map ) ) );
 };
