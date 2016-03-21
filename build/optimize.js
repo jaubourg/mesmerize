@@ -21,7 +21,7 @@ function expand( map, propagate ) {
 		propagate.forEach( function( value, key ) {
 			if ( !newMap.has( key ) ) {
 				if ( value instanceof Map ) {
-					newMap.set( key, expand( value, propagate.get( key ) ) );
+					newMap.set( key, expand( value ) );
 				} else {
 					newMap.set( key, value );
 				}
@@ -32,8 +32,8 @@ function expand( map, propagate ) {
 	const catchAll = map.get( null );
 	const newMap = new Map();
 	map.forEach( function( value, key ) {
-		if ( key !== null && value instanceof Map ) {
-			newMap.set( key, expand( value, catchAll ) );
+		if ( value instanceof Map ) {
+			newMap.set( key, expand( value, key !== null && catchAll ) );
 		} else {
 			newMap.set( key, value );
 		}
