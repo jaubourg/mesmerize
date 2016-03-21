@@ -74,6 +74,15 @@ function cut( map ) {
 	return newMap;
 }
 
+function sorterValue( value ) {
+	value = value[ 0 ];
+	return value === true ? -1 : ( value === null ? 256 : value );
+}
+
+function sorter( a, b ) {
+	return sorterValue( a ) - sorterValue( b );
+}
+
 // Transform to arrays
 function toArrays( map ) {
 	if ( !( map instanceof Map ) ) {
@@ -96,6 +105,7 @@ function toArrays( map ) {
 		}
 		output.push( [ key, value ] );
 	} );
+	output.sort( sorter );
 	return output;
 }
 
