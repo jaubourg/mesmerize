@@ -41,27 +41,34 @@ function expand( map, propagate ) {
 	return newMap;
 }
 
-// Check all terminal nodes are of the same type
-function typeCheck( type ) {
-	return function check( value, key ) {
-		if ( key === true ) {
-			if ( value !== type ) {
-				throw "FAIL";
-			}
-		} else {
-			value.forEach( check );
+// Why these array methods have not been ported to maps is beyond me
+function find( map, predicate ) {
+	for ( let entry of map.entries() ) {
+		if ( predicate( entry[ 1 ], entry[ 0 ], map ) ) {
+			return entry[ 1 ];
 		}
-	};
+	}
+}
+
+// find a node not of the given type
+const notOfTypeCache = new Map();
+function notOfType( type ) {
+	let func = notOfTypeCache.get( type );
+	if ( !func ) {
+		notOfTypeCache.set( type, ( func = function check( value, key ) {
+			return key === true ? value !== type : find( value, check );
+		} ) );
+	}
+	return func;
 }
 
 // Remove unnecessary paths (same final type)
 function cut( map ) {
 	const type = map.get( true );
 	if ( type && map.size > 1 ) {
-		try {
-			map.forEach( typeCheck( type ) );
+		if ( !find( map, notOfType( type ) ) ) {
 			return new Map( [ [ true, type ] ] );
-		} catch ( e ) {}
+		}
 	}
 	const newMap = new Map();
 	map.forEach( function( value, key ) {
