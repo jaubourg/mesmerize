@@ -1,5 +1,23 @@
 "use strict";
 
+function copy( target, source ) {
+	target = target || new Map();
+	const sourceType = source.get( true );
+	if ( sourceType ) {
+		const targetType = target.get( true );
+		if ( targetType && targetType !== sourceType ) {
+			throw new Error( `ambiguity between ${targetType} and ${sourceType}` );
+		}
+		target.set( true, sourceType );
+	}
+	source.forEach( function( map, key ) {
+		if ( key !== true ) {
+			target.set( key,copy( target.get( key ), map ) );
+		}
+	} );
+	return target;
+}
+
 const rBytes = /((?:[0-9a-f]{2})+)|(\.\.)|'([^']+)'|\[([^\]]+)\]|\s+|(.)/gi;
 
 function parseOne( expression, mimetype, map ) {
@@ -19,7 +37,24 @@ function parseOne( expression, mimetype, map ) {
 		const newCurrents = new Set();
 		currents.forEach( function( current ) {
 			numbers.forEach( function( number ) {
-				newCurrents.add( pushOne( current, number ) );
+				if ( number === null ) {
+					for ( let key of current.keys() ) {
+						if ( key !== true && key !== null ) {
+							newCurrents.add( pushOne( current, key ) );
+						}
+					}
+					newCurrents.add( pushOne( current, null ) );
+				} else {
+					const existed = current.has( number );
+					const next = pushOne( current, number );
+					newCurrents.add( next );
+					if ( !existed ) {
+						const catchAll = current.get( null );
+						if ( catchAll ) {
+							copy( next, catchAll );
+						}
+					}
+				}
 			} );
 		} );
 		currents = newCurrents;
@@ -71,34 +106,28 @@ function parseOne( expression, mimetype, map ) {
 	} );
 }
 
-// Ensure all paths are expanded (no backtracking required that way)
-function expand( map, propagate ) {
-	if ( propagate ) {
-		const final = map.get( true );
-		const propFinal = propagate.get( true );
-		if ( final ) {
-			if ( propFinal && final !== propFinal ) {
-				throw new Error( `ambiguity between ${final} and ${propFinal}` );
-			}
-		}
-		map.forEach( function( value, key ) {
-			if ( value instanceof Map ) {
-				map.set( key, expand( value, propagate.get( key ) ) );
-			}
-		} );
-		propagate.forEach( function( value, key ) {
-			if ( !map.has( key ) ) {
-				map.set( key, value instanceof Map ? expand( value ) : value );
-			}
-		} );
+// Sort elements
+function sorterValue( value ) {
+	return value === true ? -1 : ( value === null ? 256 : value );
+}
+function sorter( a, b ) {
+	return sorterValue( a[ 0 ] ) - sorterValue( b[ 0 ] );
+}
+function sortedEntries( map ) {
+	const entries = [];
+	for ( let entry of map.entries() ) {
+		entries.push( entry );
 	}
-	const catchAll = map.get( null );
-	map.forEach( function( value, key ) {
-		if ( value instanceof Map ) {
-			map.set( key, expand( value, key !== null && catchAll ) );
-		}
-	} );
-	return map;
+	entries.sort( sorter );
+	return entries;
+}
+function normalize( map ) {
+	if ( !( map instanceof Map ) ) {
+		return map;
+	}
+	return new Map( sortedEntries( map ).map( function( entry ) {
+		return [ entry[ 0 ], normalize( entry[ 1 ] ) ];
+	} ) );
 }
 
 // Why these array methods have not been ported to maps is beyond me
@@ -136,29 +165,6 @@ function cut( map ) {
 	return map;
 }
 
-// Normalize (sorted keys)
-function sorterValue( value ) {
-	return value === true ? -1 : ( value === null ? 256 : value );
-}
-function sorter( a, b ) {
-	return sorterValue( a ) - sorterValue( b );
-}
-function normalize( map ) {
-	if ( map instanceof Map ) {
-		const output = new Map();
-		const keys = [];
-		for ( let key of map.keys() ) {
-			keys.push( key );
-		}
-		keys.sort( sorter );
-		keys.forEach( function( key ) {
-			output.set( key, normalize( map.get( key ) ) );
-		} );
-		return output;
-	}
-	return map;
-}
-
 module.exports = function( list ) {
 	const map = new Map();
 	Object.getOwnPropertyNames( list ).forEach( function( mimetype ) {
@@ -167,5 +173,5 @@ module.exports = function( list ) {
 			parseOne( expression, mimetype, map );
 		} );
 	} );
-	return normalize( cut( expand( map ) ) );
+	return normalize( cut( map ) );
 };
