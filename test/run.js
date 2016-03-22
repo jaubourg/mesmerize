@@ -1,30 +1,7 @@
 "use strict";
 
 const assert = require( "assert" );
-const fs = require( "fs" );
-
-const fixtures = `${__dirname}/fixtures`;
-
-const files = new Map();
-const testedMimetypes = new Set();
-
-fs.readdirSync( fixtures ).forEach( function( registry ) {
-	if ( fs.statSync( `${fixtures}/${registry}` ).isDirectory() ) {
-		fs.readdirSync( `${fixtures}/${registry}` ).forEach( function( name ) {
-			if ( registry === "null" ) {
-				files.set( name, null );
-			} else {
-				const mimetype = `${registry}/${name}`;
-				testedMimetypes.add( mimetype );
-				if ( fs.statSync( `${fixtures}/${mimetype}` ).isDirectory() ) {
-					fs.readdirSync( `${fixtures}/${mimetype}` ).forEach( function( file ) {
-						files.set( file, mimetype );
-					} );
-				}
-			}
-		} );
-	}
-} );
+const files = require( "./files" );
 
 module.exports = function( callback ) {
 	let units = 0;
@@ -51,7 +28,7 @@ module.exports = function( callback ) {
 					}
 					try {
 						tests++;
-						const returned = runner( mimetype, `${fixtures}/${mimetype}/${filename}` );
+						const returned = runner( mimetype, `${__dirname}/fixtures/${mimetype}/${filename}` );
 						if ( returned instanceof Promise ) {
 							promises.push( returned.then( ok ).then( null, nok ) );
 						} else {
@@ -84,7 +61,7 @@ module.exports = function( callback ) {
 			console.log( `\n ${units} unit${units > 1 ? "s" : ""} handled` );
 			let untestedMimetypes = [];
 			for ( let mimetype in require( "../mimetypes.json" ) ) {
-				if ( !testedMimetypes.has( mimetype ) ) {
+				if ( !files.tested.has( mimetype ) ) {
 					untestedMimetypes.push( mimetype );
 				}
 			}
