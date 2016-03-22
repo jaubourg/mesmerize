@@ -18,6 +18,6 @@ module.exports = new Promise( function( resolve, reject ) {
 		}
 	} );
 } ).then( null, function( error ) {
-	console.log( error );
+	console.log( error.stack || error );
 	throw error;
 } );

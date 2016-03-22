@@ -94,6 +94,6 @@ module.exports = function( callback ) {
 
 		} );
 	}, function( e ) {
-		console.log( `\n \x1b[31m${e}\x1b[0m` );
+		console.log( `\n \x1b[31m${e.stack || e}\x1b[0m` );
 	} );
 };
