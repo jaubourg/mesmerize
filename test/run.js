@@ -15,10 +15,10 @@ module.exports = function( callback ) {
 				let pass = 0;
 				let fail = 0;
 				let promises = [];
-				files.forEach( function( mimetype, filename ) {
-					const message = `${filename} is ${mimetype}`;
+				files.forEach( function( data ) {
+					const message = `${data.name} is ${data.mimetype}`;
 					function ok( givenMimeType ) {
-						assert.strictEqual( givenMimeType, mimetype );
+						assert.strictEqual( givenMimeType, data.mimetype );
 						pass++;
 						console.log( `   - ${message}: \x1b[32mOK\x1b[0m` );
 					}
@@ -28,7 +28,7 @@ module.exports = function( callback ) {
 					}
 					try {
 						tests++;
-						const returned = runner( mimetype, `${__dirname}/fixtures/${mimetype}/${filename}` );
+						const returned = runner( data );
 						if ( returned instanceof Promise ) {
 							promises.push( returned.then( ok ).then( null, nok ) );
 						} else {

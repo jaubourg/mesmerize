@@ -4,9 +4,9 @@ require( "./run" )( function( unit ) {
 	const assert = require( "assert" );
 	const fs = require( "fs" );
 	const mesmerize = require( ".." );
-	unit( "entire buffer", function( mimetype, filename ) {
+	unit( "entire buffer", function( data ) {
 		return new Promise( function( resolve, reject ) {
-			fs.readFile( filename, function( error, buffer ) {
+			fs.readFile( data.path, function( error, buffer ) {
 				if ( error ) {
 					reject( error );
 				} else {
@@ -15,7 +15,7 @@ require( "./run" )( function( unit ) {
 			} );
 		} );
 	} );
-	unit( "streaming", function( expectedMimetype, filename ) {
+	unit( "streaming", function( data ) {
 		return new Promise( function( resolve, reject ) {
 			let count = 0;
 			let mimetype;
@@ -45,7 +45,7 @@ require( "./run" )( function( unit ) {
 					}
 				}
 			}
-			mesmerize.stream( fs.createReadStream( filename ), {
+			mesmerize.stream( fs.createReadStream( data.path ), {
 				callback: handlerFactory( 0 ),
 				queue: true
 			} ).on( "mimetype", handlerFactory( 1 ) )
