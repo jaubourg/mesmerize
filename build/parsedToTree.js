@@ -27,14 +27,14 @@ function mapKey( map ) {
 
 // Extract reused branches from the tree
 function findSame( root ) {
-	const bySize = new Map();
+	const similar = new Map();
 	const reused = new Set();
 	reused.add( ( function inspect( map ) {
 		if ( map instanceof Map ) {
 			const key = mapKey( map );
-			let others = bySize.get( key );
+			let others = similar.get( key );
 			if ( !others ) {
-				bySize.set( key, ( others = [] ) );
+				similar.set( key, ( others = [] ) );
 			}
 			for ( let other of others ) {
 				if ( same( other, map ) ) {
