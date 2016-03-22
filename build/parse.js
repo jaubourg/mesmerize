@@ -12,7 +12,7 @@ function copy( target, source ) {
 	}
 	source.forEach( function( map, key ) {
 		if ( key !== true ) {
-			target.set( key,copy( target.get( key ), map ) );
+			target.set( key, copy( target.get( key ), map ) );
 		}
 	} );
 	return target;
