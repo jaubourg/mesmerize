@@ -17,15 +17,24 @@ function same( map1, map2 ) {
 	return true;
 }
 
+function mapKey( map ) {
+	const keys = [];
+	for ( let key of map.keys() ) {
+		keys.push( key );
+	}
+	return `${map.size}-${keys}`;
+}
+
 // Extract reused branches from the tree
 function findSame( root ) {
 	const bySize = new Map();
 	const reused = new Set();
 	reused.add( ( function inspect( map ) {
 		if ( map instanceof Map ) {
-			let others = bySize.get( map.size );
+			const key = mapKey( map );
+			let others = bySize.get( key );
 			if ( !others ) {
-				bySize.set( map.size, ( others = [] ) );
+				bySize.set( key, ( others = [] ) );
 			}
 			for ( let other of others ) {
 				if ( same( other, map ) ) {
