@@ -4,3 +4,4 @@
 /.jshintrc
 /.npmignore
 /mimetypes.json
+/performance.js
