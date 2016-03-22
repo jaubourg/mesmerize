@@ -9,7 +9,7 @@ const treeToCode = require( "./treeToCode" );
 module.exports = new Promise( function( resolve, reject ) {
 	const start = Date.now();
 	const code = treeToCode( parsedToTree( parse( mimetypes ) ) );
-	console.log( `Generator built in ${Date.now() - start}ms` );
+	console.log( `\n Generator built in ${Date.now() - start}ms` );
 	fs.writeFile( `${__dirname}/../lib/mimetypes.js`, code, function( error ) {
 		if ( error ) {
 			reject( error );
