@@ -71,6 +71,94 @@ function parseOne( expression, mimetype, map ) {
 	} );
 }
 
+// Ensure all paths are expanded (no backtracking required that way)
+function expand( map, propagate ) {
+	if ( propagate ) {
+		const final = map.get( true );
+		const propFinal = propagate.get( true );
+		if ( final ) {
+			if ( propFinal && final !== propFinal ) {
+				throw new Error( `ambiguity between ${final} and ${propFinal}` );
+			}
+		}
+		map.forEach( function( value, key ) {
+			if ( value instanceof Map ) {
+				map.set( key, expand( value, propagate.get( key ) ) );
+			}
+		} );
+		propagate.forEach( function( value, key ) {
+			if ( !map.has( key ) ) {
+				map.set( key, value instanceof Map ? expand( value ) : value );
+			}
+		} );
+	}
+	const catchAll = map.get( null );
+	map.forEach( function( value, key ) {
+		if ( value instanceof Map ) {
+			map.set( key, expand( value, key !== null && catchAll ) );
+		}
+	} );
+	return map;
+}
+
+// Why these array methods have not been ported to maps is beyond me
+function find( map, predicate ) {
+	for ( let entry of map.entries() ) {
+		if ( predicate( entry[ 1 ], entry[ 0 ], map ) ) {
+			return entry[ 1 ];
+		}
+	}
+}
+
+// find a node not of the given type
+const notOfTypeCache = new Map();
+function notOfType( type ) {
+	let func = notOfTypeCache.get( type );
+	if ( !func ) {
+		notOfTypeCache.set( type, ( func = function check( value, key ) {
+			return key === true ? value !== type : find( value, check );
+		} ) );
+	}
+	return func;
+}
+
+// Remove unnecessary paths (same final type)
+function cut( map ) {
+	const type = map.get( true );
+	if ( type && map.size > 1 && !find( map, notOfType( type ) ) ) {
+		return new Map( [ [ true, type ] ] );
+	}
+	map.forEach( function( value, key ) {
+		if ( value instanceof Map ) {
+			map.set( key, cut( value ) );
+		}
+	} );
+	return map;
+}
+
+// Normalize (sorted keys)
+function sorterValue( value ) {
+	return value === true ? -1 : ( value === null ? 256 : value );
+}
+function sorter( a, b ) {
+	return sorterValue( a ) - sorterValue( b );
+}
+function normalize( map ) {
+	if ( map instanceof Map ) {
+		const output = new Map();
+		const keys = [];
+		for ( let key of map.keys() ) {
+			keys.push( key );
+		}
+		keys.sort( sorter );
+		keys.forEach( function( key ) {
+			output.set( key, normalize( map.get( key ) ) );
+		} );
+		return output;
+	}
+	return map;
+}
+
 module.exports = function( list ) {
 	const map = new Map();
 	Object.getOwnPropertyNames( list ).forEach( function( mimetype ) {
@@ -79,5 +167,5 @@ module.exports = function( list ) {
 			parseOne( expression, mimetype, map );
 		} );
 	} );
-	return map;
+	return normalize( cut( expand( map ) ) );
 };
