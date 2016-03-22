@@ -15,8 +15,10 @@
 		"'GIF8' [79] 'a'"
 	,
 	"image/jpeg": [
-		"ffd8 ffdb",
-		"ffd8 .... 'Exif' 0001",
+		"ffd8 ffdb"
+	,
+		"ffd8 .... 'Exif' 0001"
+	,
 		"ffd8 .... 'JFIF' 0000"
 	]
 	,
@@ -24,7 +26,8 @@
 		"89 'PNG\r\n' 1a '\n'"
 	,
 	"image/tiff": [
-		"4d4d 002a",
+		"4d4d 002a"
+	,
 		"4949 2a00"
 	]
 	,
@@ -41,8 +44,10 @@
 		"'<?xml' [ \f\n\t\r]"
 	,
 	"video/mp4": [
-		"'....ftyp3gp5'",
-		"'....ftypMSNV'",
+		"'....ftyp3gp5'"
+	,
+		"'....ftypMSNV'"
+	,
 		"'....ftypisom'"
 	]
 }
