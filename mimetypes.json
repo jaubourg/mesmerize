@@ -1,4 +1,7 @@
 {
+	"audio/mp4":
+		"'....ftypM4A '"
+	,
 	"audio/wav":
 		"'RIFF....WAVE'"
 	,
@@ -14,7 +17,11 @@
 	"image/gif":
 		"'GIF8' [79] 'a'"
 	,
-	"image/jpeg": [
+	"image/jp2":
+		"0000 000C 'jP  ' 0D0A"
+	,
+	"image/jpeg":
+	[
 		"ffd8 ffdb"
 	,
 		"ffd8 .... 'Exif' 0001"
@@ -25,7 +32,8 @@
 	"image/png":
 		"89 'PNG\r\n' 1a '\n'"
 	,
-	"image/tiff": [
+	"image/tiff":
+	[
 		"4d4d 002a"
 	,
 		"4949 2a00"
@@ -43,11 +51,32 @@
 	"text/xml":
 		"'<?xml' [ \f\n\t\r]"
 	,
-	"video/mp4": [
+	"video/mp4":
+	[
+		"'....ftypisom'"
+	,
 		"'....ftyp3gp5'"
 	,
-		"'....ftypMSNV'"
+		"'....ftypmp42'"
 	,
-		"'....ftypisom'"
+		"'....ftypMSNV'"
 	]
+	,
+	"video/quicktime":
+	[
+		"'....free'"
+	,
+		"'....mdat'"
+	,
+		"'....pnot'"
+	,
+		"'....skip'"
+	,
+		"'....wide'"
+	,
+		"'....ftypqt  '"
+	]
+	,
+	"video/x-flv":
+		"'FLV' 01"
 }
