@@ -24,9 +24,9 @@
 	[
 		"ffd8 ffdb"
 	,
-		"ffd8 .... 'Exif' 0001"
+		"ffd8 '..Exif' 0001"
 	,
-		"ffd8 .... 'JFIF' 0000"
+		"ffd8 '..JFIF' 0000"
 	]
 	,
 	"image/png":
@@ -34,13 +34,25 @@
 	,
 	"image/tiff":
 	[
-		"4d4d 002a"
+		"'II' 2a00"
 	,
-		"4949 2a00"
+		"'MM' 002a"
 	]
+	,
+	"image/vnd.adobe.photoshop":
+		"'8BPS'"
+	,
+	"image/vnd.ms-photo":
+		"4949 bc"
 	,
 	"image/webp":
 		"'RIFF....WEBP'"
+	,
+	"image/x-canon-cr2": [
+		"'II' 2a00 '....CR'"
+	,
+		"'MM' 002a '....CR'"
+	]
 	,
 	"image/x-icon":
 		"0000 0100"
