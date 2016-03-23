@@ -188,15 +188,14 @@ function parseOne( expression, mimetype, map ) {
 }
 
 /**
- * Transform path marker into a number
- * 0-255 => 0-255
- * true => -1
- * null => 256
- * @param {number|true|null} value
- * @return {number}
+ * Sorter values for true and null
  */
-function sorterValue( value ) {
-	return value === true ? -1 : ( value === null ? 256 : value );
+const sorterValue = new Map( [
+	[ true, -1 ],
+	[ null, 256 ]
+] );
+for ( let byte = 0; byte < 256; byte++ ) {
+	sorterValue.set( byte, byte );
 }
 /**
  * Callback for sorting node entries
@@ -205,7 +204,7 @@ function sorterValue( value ) {
  * @return {number}
  */
 function sorter( a, b ) {
-	return sorterValue( a[ 0 ] ) - sorterValue( b[ 0 ] );
+	return sorterValue.get( a[ 0 ] ) - sorterValue.get( b[ 0 ] );
 }
 /**
  * Takes a node and returns the array of entries sorted
