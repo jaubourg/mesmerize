@@ -213,10 +213,11 @@ function sorter( a, b ) {
  * @param {Map} map the node
  * @return {Array<Array>} the sorted entries
  */
-function sortedEntries( map ) {
+function normalizeEntries( map ) {
 	const entries = [];
 	for ( let entry of map.entries() ) {
 		if ( entry[ 0 ] !== "_type" ) {
+			entry[ 1 ] = normalize( entry[ 1 ] );
 			entries.push( entry );
 		}
 	}
@@ -239,10 +240,8 @@ function normalize( map ) {
 			[ true, map.get( true ) ]
 		] );
 	}
-	// Else return a new map with entries sorted and normalized
-	return new Map( sortedEntries( map ).map( function( entry ) {
-		return [ entry[ 0 ], normalize( entry[ 1 ] ) ];
-	} ) );
+	// Else return a new map with entries normalized
+	return new Map( normalizeEntries( map ) );
 }
 
 /**
