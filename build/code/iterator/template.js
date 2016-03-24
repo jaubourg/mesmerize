@@ -14,23 +14,25 @@ function Iterator( root, callback ) {
 }
 
 Iterator.prototype._next = function( data ) {
-	if ( Array.isArray( data ) ) {
+	if ( !data ) {
+		this._done = true;
+	} else if ( typeof data === "string" ) {
+		if ( data ) {
+			this._callback( data );
+		}
+		this._done = true;
+	} else if ( data.length ) {
 		this._array = data;
 		this._index = 0;
 		this._lastIndex = data.length - 1;
 		this._map = null;
-	} else if ( data instanceof Map ) {
+	} else {
 		this._map = data;
 		this._array = null;
 		const type = data.get( true );
 		if ( type ) {
 			this._callback( type );
 		}
-	} else {
-		if ( data ) {
-			this._callback( data );
-		}
-		this._done = true;
 	}
 };
 
