@@ -1,21 +1,8 @@
 "use strict";
 
-// Newline matcher
-const rNewLine = /\n/g;
+const utils = require( "../utils" );
 
-/**
- * Indents a code block with a tab
- * @param {string} block the code block
- * @return {string} the code block indented
- */
-function indent( block ) {
-	return block.replace( rNewLine, "\n\t" );
-}
-
-/**
- * And operator matcher
- */
-const rAnd = /\s*&&\s*/;
+let funcTemp = false;
 
 /**
  * Generate an if statement
@@ -24,7 +11,17 @@ const rAnd = /\s*&&\s*/;
  */
 function generateIf( tree ) {
 	// Split the test
-	let test = tree.if.split( rAnd );
+	let temp = false;
+	let test = tree.if.map( function( value ) {
+		if ( value === null ) {
+			return "( ( yield ) || true )";
+		} else if ( typeof value === "string" ) {
+			// We have a map
+			temp = funcTemp = true;
+			return `( temp = ${value}.get( yield ) )`;
+		}
+		return `( yield ) === ${utils.encodeKey( value )}`;
+	} );
 	// Only newline/indent if we have an and-chain
 	if ( test.length > 1 ) {
 		test = `(\n\t${test.join( " &&\n\t" )}\n)`;
@@ -32,16 +29,18 @@ function generateIf( tree ) {
 		test = `( ${test[ 0 ]} )`;
 	}
 	// Generate then statement
-	const ok = `{\n\t${indent( generateCode( tree.then ) )}\n}`;
+	const ok = `{\n\t${utils.indent( generateCode( tree.then || {
+		func: "temp"
+	} ) )}\n}`;
 	// Generate else statement
 	let nok = "";
-	if ( tree.default ) {
-		nok = generateCode( tree.default );
+	if ( tree.catchAll ) {
+		nok = generateCode( tree.catchAll );
 		// Handle elseif for readability
-		if ( tree.default.if ) {
+		if ( tree.catchAll.if ) {
 			nok = ` else ${nok}`;
 		} else {
-			nok = ` else {\n\t${indent( nok )}\n}`;
+			nok = ` else {\n\t${utils.indent( nok )}\n}`;
 		}
 	}
 	// Generate the entire statement
@@ -55,16 +54,16 @@ function generateIf( tree ) {
  */
 function generateCode( tree ) {
 	let code = "";
-	// Handle if case
-	if ( tree.if ) {
-		code = generateIf( tree );
 	// Handle yield on function case
-	} else if ( tree.func ) {
+	if ( tree.func ) {
 		code = `yield * ${tree.func}( callback );`;
+	// Handle if case
+	} else if ( tree.if ) {
+		code = generateIf( tree );
 	}
 	// Handle mimetype
 	if ( tree.type ) {
-		code = `callback( ${tree.type} );${code ? `\n${code}` : ""}`;
+		code = `callback( ${JSON.stringify( tree.type )} );${code ? `\n${code}` : ""}`;
 	}
 	// Done!
 	return code;
@@ -82,8 +81,12 @@ function generateFunction( body, name ) {
 	if ( body.func ) {
 		return body.func;
 	}
-	body = ( body.temp ? "let temp;\n" : "" ) + generateCode( body );
-	return `function * ${name || ""}( callback ) {\n\t${indent( body )}\n}`;
+	funcTemp = false;
+	body = generateCode( body );
+	if ( funcTemp ) {
+		body = "let temp;\n" + body;
+	}
+	return `function * ${name || ""}( callback ) {\n\t${utils.indent( body )}\n}`;
 }
 
 /**
@@ -95,7 +98,7 @@ function generateFunction( body, name ) {
 function generateMap( entries, name ) {
 	return `const ${name} = new Map( [\n${
 		entries.map( function( entry ) {
-			return `\t[ ${entry[ 0 ]}, ${indent( generateFunction( entry[ 1 ] ) )} ]`;
+			return `\t[ ${utils.encodeKey( entry[ 0 ] )}, ${utils.indent( generateFunction( entry[ 1 ] ) )} ]`;
 		} ).join( ",\n" )
 	}\n] );`;
 }

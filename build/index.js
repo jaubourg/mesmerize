@@ -1,54 +1,37 @@
 "use strict";
 
-/**
- * List of operations needed to generate code in order
- */
-const operations = {
-	parse: require( "./parse" ),
-	split: require( "./split" ),
-	splitToTree: require( "./splitToTree" ),
-	treeToCode: require( "./treeToCode" )
-};
+const fs = require( "fs" );
+const mimetypes = require( "../mimetypes" );
+const parse = require( "./parse" );
 
-/**
- * Generates the code
- */
-function generate() {
-	// Start with the json file
-	let tmp = require( "../mimetypes" );
-	// Time stuff
-	const globalStart = Date.now();
-	const timings = [];
-	// Do the operations in order
-	for ( let name in operations ) {
-		const start = Date.now();
-		tmp = operations[ name ]( tmp );
-		timings.push( {
-			name: name,
-			time: Date.now() - start
+const parseStart = Date.now();
+const parsed = parse( mimetypes );
+console.log( `\n Parsed in ${Date.now() - parseStart}ms` );
+
+try {
+	fs.mkdirSync( `${__dirname}/../lib/iterators` );
+} catch ( e ) {}
+
+module.exports = Promise.all(
+	fs.readdirSync( `${__dirname}/code` ).filter( function( name ) {
+		return fs.statSync( `${__dirname}/code/${name}` ).isDirectory();
+	} ).map( function( name ) {
+		const generate = require( `./code/${name}` );
+		let start = Date.now();
+		const code = generate( parsed );
+		console.log( ` Generated "${name}" in ${Date.now() - start}ms` );
+		return new Promise( function( resolve, reject ) {
+			fs.writeFile(
+				`${__dirname}/../lib/iterators/${name}.js`,
+				code,
+				function( error ) {
+					if ( error ) {
+						reject( error );
+					} else {
+						resolve();
+					}
+				}
+			);
 		} );
-	}
-	// Log times
-	console.log( `\n Generator build in ${Date.now() - globalStart}ms` );
-	timings.forEach( function( data ) {
-		console.log( ` - ${data.name}: ${data.time}ms` );
-	} );
-	// Done!
-	return tmp;
-}
-
-// We exports the promise direcly
-module.exports = new Promise( function( resolve, reject ) {
-	// Write the file
-	require( "fs" ).writeFile( `${__dirname}/../lib/mimetypes.js`, generate(), function( error ) {
-		if ( error ) {
-			reject( error );
-		} else {
-			resolve();
-		}
-	} );
-} ).then( null, function( error ) {
-	// If there is an error, log and rethrow it
-	console.log( error.stack || error );
-	throw error;
-} );
+	} )
+);

@@ -18,12 +18,19 @@ function standard( library ) {
 }
 const libs = {
 	"file-type": standard,
-	"": standard
 };
+require( "./lib/modes" ).forEach( function( name ) {
+	libs[ `~${name}` ] = standard;
+} );
 
+const rMode = /^~/;
 const times = [];
 Object.getOwnPropertyNames( libs ).forEach( function( name, index ) {
-	const run = libs[ name ]( require( name || "." ) );
+	const isMode = rMode.test( name );
+	const run = libs[ name ]( require( isMode ? "." : name ) );
+	if ( isMode ) {
+		require( "./lib/Finder" ).mode = name.replace( rMode, "" );
+	}
 	const time = [];
 	function iteration( buffer ) {
 		run( buffer ).forEach( function( value, index ) {
@@ -38,7 +45,7 @@ Object.getOwnPropertyNames( libs ).forEach( function( name, index ) {
 		times.min = micro;
 	}
 	times.push( {
-		library: name || "mesmerize",
+		library: name,
 		time: micro
 	} );
 } );

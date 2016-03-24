@@ -1,6 +1,32 @@
 "use strict";
 
 /**
+ * To keep track of all the mimetypes the node can lead to
+ */
+const typeSets = new WeakMap();
+
+/**
+ * Creates a new map with potential mimetypes set accroding to the mimetype param
+ * @param {null|string|Map} mimetype if a map, will duplicate its type set
+ * @return {Map}
+ */
+function newMap( mimetype ) {
+	const map = new Map();
+	const typeSet = new Set();
+	if ( mimetype ) {
+		if ( mimetype instanceof Map ) {
+			for ( let type of typeSets.get( mimetype ) ) {
+				typeSet.add( type );
+			}
+		} else {
+			typeSet.add( mimetype );
+		}
+	}
+	typeSets.set( map, typeSet );
+	return map;
+}
+
+/**
  * Duplicates paths from source onto target
  * @param {?Map} target the map to target (will be created if null)
  * @param {Map} source the map from which to copy
@@ -9,18 +35,10 @@
  */
 function copy( target, source ) {
 	// If target does not exist, create it
-	target = target || new Map( [
-		[ "_type", new Set() ]
-	] );
+	target = target || newMap( source );
 	source.forEach( function( value, key ) {
-		// Handle set of types
-		if ( key === "_type" ) {
-			const set = target.get( "_type" );
-			for ( let type of value ) {
-				set.add( type );
-			}
-		// OR Handle mimetype and control ambiguities
-		} else if ( key === true ) {
+		// Handle mimetype and control ambiguities
+		if ( key === true ) {
 			const targetType = target.get( true );
 			if ( targetType ) {
 				if ( targetType !== value ) {
@@ -68,11 +86,9 @@ function parseOne( expression, mimetype, map ) {
 	function pushOne( current, number ) {
 		let next = current.get( number );
 		if ( !next ) {
-			current.set( number, ( next = new Map( [
-				[ "_type", new Set( [ mimetype ] ) ]
-			] ) ) );
+			current.set( number, ( next = newMap( mimetype ) ) );
 		} else {
-			next.get( "_type" ).add( mimetype );
+			typeSets.get( next ).add( mimetype );
 		}
 		return next;
 	}
@@ -95,7 +111,7 @@ function parseOne( expression, mimetype, map ) {
 				if ( number === null ) {
 					// Progress all current non-catch-all paths
 					for ( let key of current.keys() ) {
-						if ( key !== true && key !== null && key !== "_type" ) {
+						if ( key !== true && key !== null ) {
 							newCurrents.add( pushOne( current, key ) );
 						}
 					}
@@ -188,59 +204,105 @@ function parseOne( expression, mimetype, map ) {
 }
 
 /**
- * Sorter values for true and null
+ * Controls two trees are the same structurally
+ * @param {Map|any} tree1
+ * @param {Map|any} tree2
+ * @return {boolean} true if the same, false otherwise
  */
-const sorterValue = new Map( [
-	[ true, -1 ],
-	[ null, 256 ]
-] );
-for ( let byte = 0; byte < 256; byte++ ) {
-	sorterValue.set( byte, byte );
-}
-/**
- * Callback for sorting node entries
- * @param {Array<Array>} a first entry
- * @param {Array<Array>} b second entry
- * @return {number}
- */
-function sorter( a, b ) {
-	return sorterValue.get( a[ 0 ] ) - sorterValue.get( b[ 0 ] );
-}
-/**
- * Takes a node and returns the array of entries sorted
- * filters out _type set
- * @param {Map} map the node
- * @return {Array<Array>} the sorted entries
- */
-function normalizeEntries( map ) {
-	const entries = [];
-	for ( let entry of map.entries() ) {
-		if ( entry[ 0 ] !== "_type" ) {
-			entry[ 1 ] = normalize( entry[ 1 ] );
-			entries.push( entry );
+function same( tree1, tree2 ) {
+	// If at least one input is not a map, use strict equality
+	if ( !( tree1 instanceof Map ) || !( tree2 instanceof Map ) ) {
+		return tree1 === tree2;
+	}
+	// If sizes are different, maps are different
+	if ( tree1.size !== tree2.size ) {
+		return false;
+	}
+	// Iterate over entries
+	for ( let entry of tree1.entries() ) {
+		if ( !same( entry[ 1 ], tree2.get( entry[ 0 ] ) ) ) {
+			return false;
 		}
 	}
-	entries.sort( sorter );
-	return entries;
+	// If we arrived here, we know the maps are the same
+	return true;
 }
+
 /**
- * Normalizes the structure by sorting entries and cutting unnecessary paths
- * @param {any} map
- * @return {any}
+ * Normalizes the structure by sorting entries, cutting unnecessary paths
+ * And returning a list of abstract objects
+ * @param {Map} root
+ * @return {Array<Object>}
  */
-function normalize( map ) {
-	// If not a map, do nothing
-	if ( !( map instanceof Map ) ) {
-		return map;
-	}
-	// Cut nodes with a type and no other possibility
-	if ( map.has( true ) && map.get( "_type" ).size === 1 ) {
-		return new Map( [
-			[ true, map.get( true ) ]
-		] );
-	}
-	// Else return a new map with entries normalized
-	return new Map( normalizeEntries( map ) );
+function normalize( root ) {
+	const list = new Set();
+	const similarsSet = new Map();
+	list.add( ( function handle( node ) {
+		// If not a map, do nothing
+		if ( !( node instanceof Map ) ) {
+			return node;
+		}
+		// Cut nodes with a type and no other possibility
+		const type = node.get( true );
+		if ( type && node.size > 1 && typeSets.get( node ).size === 1 ) {
+			node = newMap( type );
+			node.set( true, type );
+		}
+		// Find eventual duplicate
+		const keys = [];
+		let catchAll;
+		for ( let key of node.keys() ) {
+			if ( key === null ) {
+				catchAll = node.get( null );
+			} else if ( key !== true ) {
+				keys.push( key );
+			}
+		}
+		keys.sort();
+		let id = [];
+		if ( type ) {
+			id.push( type );
+		}
+		if ( catchAll ) {
+			id.push( "null" );
+		}
+		id.push.apply( id, keys );
+		id =  "" + id;
+		let similars = similarsSet.get( id );
+		if ( similars ) {
+			for ( let similar of similars ) {
+				if ( same( node, similar.input ) ) {
+					list.add( similar.output );
+					return similar.output;
+				}
+			}
+		} else {
+			similarsSet.set( id, ( similars = [] ) );
+		}
+		// Install the object
+		const object = {
+			catchAll: null,
+			type: type,
+			entries: []
+		};
+		similars.push( {
+			input: node,
+			output: object
+		} );
+		if ( catchAll ) {
+			object.catchAll = handle( catchAll );
+		}
+		for ( let key of keys ) {
+			object.entries.push( [ key, handle( node.get( key ) ) ] );
+		}
+		return object;
+	} )( root ) );
+	const array = [];
+	list.forEach( function( object ) {
+		array.push( object );
+		object.index = array.length;
+	} );
+	return array;
 }
 
 /**
