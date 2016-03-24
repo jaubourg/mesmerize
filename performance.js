@@ -1,6 +1,6 @@
 "use strict";
 
-const RUNS = 5000;
+const RUNS = 10000;
 
 const fs = require( "fs" );
 

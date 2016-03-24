@@ -6,6 +6,9 @@
  * @return {string}
  */
 function encodeKey( key ) {
+	if ( typeof key !== "number" ) {
+		return JSON.stringify( key );
+	}
 	// Set to hexadecimal
 	key = key.toString( 16 );
 	// Pad with a 0 if needed
