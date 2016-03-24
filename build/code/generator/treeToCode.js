@@ -114,5 +114,7 @@ module.exports = function( data ) {
 	const funcs = data.functions.map( function( tree, index ) {
 		return generateFunction( tree, `func_${index + 1}` );
 	} ).join( "\n" );
-	return `"use strict";\n\n${maps}\n\n${funcs}\n\nmodule.exports = func_${data.functions.length};\n`;
+	return `"use strict";\n\n${maps}\n\n${funcs}\n\nmodule.exports = function( callback ) {\n` +
+		`\tconst iterator = func_${data.functions.length}( callback );\n` +
+		`\titerator.next();\n\treturn iterator;\n};\n`;
 };

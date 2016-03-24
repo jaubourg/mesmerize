@@ -3,14 +3,12 @@
 const root = null;
 
 function Iterator( root, callback ) {
-	this._map = null;
+	this._map = root;
 	this._array = null;
 	this._index = 0;
 	this._lastIndex = 0;
 	this._callback = callback;
-	this._started = false;
 	this._done = false;
-	this._next( root );
 }
 
 Iterator.prototype._next = function( data ) {
@@ -37,21 +35,17 @@ Iterator.prototype._next = function( data ) {
 };
 
 Iterator.prototype.next = function( charCode ) {
-	if ( this._started ) {
-		if ( this._array ) {
-			const current = this._array[ this._index++ ];
-			if ( !current || current === charCode ) {
-				if ( this._index === this._lastIndex ) {
-					this._next( this._array[ this._index ] );
-				}
-			} else {
-				this._next();
+	if ( this._array ) {
+		const current = this._array[ this._index++ ];
+		if ( !current || current === charCode ) {
+			if ( this._index === this._lastIndex ) {
+				this._next( this._array[ this._index ] );
 			}
 		} else {
-			this._next( this._map.get( charCode ) || this._map.get( null ) );
+			this._next();
 		}
 	} else {
-		this._started = true;
+		this._next( this._map.get( charCode ) || this._map.get( null ) );
 	}
 	return {
 		done: this._done
