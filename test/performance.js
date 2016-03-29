@@ -1,36 +1,37 @@
 "use strict";
 
-const RUNS = 100000;
+const RUNS = 1000;
 
 const fs = require( "fs" );
 
-const files = require( "./test/files" ).map( function( data ) {
+const files = require( "./files" ).map( function( data ) {
 	return fs.readFileSync( data.path );
 } );
 
-function standard( library ) {
-	return function( buffer ) {
-		const start = process.hrtime();
-		if ( library( buffer ) !== true ) {
-			return process.hrtime( start );
-		}
+function standard( options ) {
+	return function( library ) {
+		return function( buffer ) {
+			const start = process.hrtime();
+			if ( library( buffer, options ) !== true ) {
+				return process.hrtime( start );
+			}
+		};
 	};
 }
 const libs = {
-	"file-type": standard,
+	"file-type": standard(),
 };
-require( "./lib/modes" ).forEach( function( name ) {
-	libs[ `~${name}` ] = standard;
+require( "./modes" ).forEach( function( mode ) {
+	libs[ `~${mode || "DEFAULT"}` ] = standard( mode && {
+		mode: mode
+	} );
 } );
 
 const rMode = /^~/;
 const times = [];
 Object.getOwnPropertyNames( libs ).forEach( function( name, index ) {
 	const isMode = rMode.test( name );
-	const run = libs[ name ]( require( isMode ? "." : name ) );
-	if ( isMode ) {
-		require( "./lib/Finder" ).mode = name.replace( rMode, "" );
-	}
+	const run = libs[ name ]( require( isMode ? ".." : name ) );
 	const time = [];
 	function iteration( buffer ) {
 		run( buffer ).forEach( function( value, index ) {

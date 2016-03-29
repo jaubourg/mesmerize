@@ -2,19 +2,16 @@
 
 const assert = require( "assert" );
 const files = require( "./files" );
-const Finder = require( "../lib/Finder" );
-const modes = require( "../lib/modes" );
 
 module.exports = function( callback ) {
 	let units = 0;
 	let currentRunner = require( "../build" );
 	currentRunner.then( function() {
-		for ( let mode of modes ) {
+		for ( let mode of require( "./modes" ) ) {
 			// jshint -W083
 			callback( function( title, runner ) {
-				title = `${mode} - ${title}`;
+				title = `${mode || "DEFAULT"} - ${title}`;
 				function doRun() {
-					Finder.mode = mode;
 					console.log( `\n ${title}\n ${title.replace( /./g, "-" )}\n` );
 					units++;
 					let tests = 0;
@@ -34,7 +31,7 @@ module.exports = function( callback ) {
 						}
 						try {
 							tests++;
-							const returned = runner( data );
+							const returned = runner( data, mode );
 							if ( returned instanceof Promise ) {
 								promises.push( returned.then( ok ).then( null, nok ) );
 							} else {
