@@ -1,6 +1,6 @@
 "use strict";
 
-const RUNS = 10000;
+const RUNS = 100000;
 
 const fs = require( "fs" );
 
@@ -60,7 +60,7 @@ const display = times.map( function( data, index ) {
 		library: `${data.library}`,
 		ms: ( data.time / 1000 ).toFixed( 2 ) + "ms",
 		mic: data.time.toFixed( 2 ) + "µs",
-		mult: Math.round( data.time / times.min ) + "x"
+		mult: ( data.time / times.min ).toFixed( 1 ) + "x"
 	};
 	for ( let key in output ) {
 		if ( !index || padding[ key ] < output[ key ].length ) {
