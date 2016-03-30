@@ -8,9 +8,7 @@ function Iterator( root, callback ) {
 }
 
 Iterator.prototype.next = function( charCode ) {
-	if ( this._function ) {
-		this._function = this._function( charCode, this._callback );
-	}
+	this._function = this._function( charCode, this._callback );
 	return {
 		done: !this._function
 	};
