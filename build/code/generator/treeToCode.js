@@ -111,10 +111,9 @@ module.exports = function( data ) {
 	const maps = data.maps.map( function( entries, index ) {
 		return generateMap( entries, `map_${index + 1}` );
 	} ).join( "\n" );
+	const lastIndex = data.functions.length - 1;
 	const funcs = data.functions.map( function( tree, index ) {
-		return generateFunction( tree, `func_${index + 1}` );
+		return generateFunction( tree, index === lastIndex ? "root" : `func_${index + 1}` );
 	} ).join( "\n" );
-	return `"use strict";\n\n${maps}\n\n${funcs}\n\nmodule.exports = function( callback ) {\n` +
-		`\tconst iterator = func_${data.functions.length}( callback );\n` +
-		`\titerator.next();\n\treturn iterator;\n};\n`;
+	return `${maps}\n${funcs}`;
 };
