@@ -32,7 +32,29 @@ require( "./iterators" ).forEach( function( name ) {
 const rMode = /^~/;
 const times = [];
 const minTimes = [];
+const timerCounts = new Set();
+function populateTimers( divider ) {
+	let runs = RUNS;
+	while ( runs >= 1 ) {
+		timerCounts.add(
+			1 * ( Math.round( runs < 10 ? 1 : runs ) + "" ).replace( /^(.)(.*)$/, function( _, $1, $2 ) {
+				return $1 + $2.replace( /./g, "0" );
+			} )
+		);
+		runs = runs / divider;
+	}
+}
+populateTimers( 10 );
+populateTimers( 5 );
+populateTimers( 2 );
 const runCounts = [];
+for ( let count of timerCounts ) {
+	runCounts.push( count );
+}
+runCounts.sort( function( a, b ) {
+	return a - b;
+} );
+
 Object.getOwnPropertyNames( libs ).forEach( function( name, index ) {
 	const isMode = rMode.test( name );
 	const run = libs[ name ]( require( isMode ? ".." : name ) );
@@ -42,23 +64,14 @@ Object.getOwnPropertyNames( libs ).forEach( function( name, index ) {
 			time[ index ] = ( time[ index ] || 0 ) + value;
 		} );
 	}
-	const timers = {};
-	let runs = RUNS;
-	while ( runs >= 1 ) {
-		timers[ runs ] = 0;
-		runs /= 10;
-	}
 	const scaleTimers = [];
 	for ( let i = 0; i < RUNS; ) {
 		files.forEach( iteration );
 		i++;
-		if ( timers.hasOwnProperty( i ) ) {
+		if ( timerCounts.has( i ) ) {
 			const micro = ( time[ 0 ] * 1000 + time[ 1 ] / 1000 ) / i;
 			if ( !index || micro < minTimes[ scaleTimers.length ] ) {
 				minTimes[ scaleTimers.length ] = micro;
-			}
-			if ( !index ) {
-				runCounts.push( i );
 			}
 			scaleTimers.push( ( time[ 0 ] * 1000 + time[ 1 ] / 1000 ) / i );
 		}
