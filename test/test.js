@@ -3,8 +3,8 @@
 const assert = require( "assert" );
 const files = require( "./files" );
 
-function displayTitle( mode, unitTitle ) {
-	const title = `${mode || "DEFAULT"} - ${unitTitle}`;
+function displayTitle( iterator, unitTitle ) {
+	const title = `${iterator || "DEFAULT"} - ${unitTitle}`;
 	console.log( `\n ${title}\n ${title.replace( /./g, "-" )}\n` );
 }
 
@@ -12,13 +12,13 @@ let units = 0;
 let globalTests = 0;
 let globalPass = 0;
 let globalFail = 0;
-function handleRunner( unit, mode ) {
+function handleRunner( unit, iterator ) {
 	return function() {
 		units++;
 		let tests = 0;
 		let pass = 0;
 		let fail = 0;
-		displayTitle( mode, unit.title );
+		displayTitle( iterator, unit.title );
 		return Promise.all( files.map( function( data ) {
 			const message = `${data.name} is ${data.mimetype}`;
 			function ok( givenMimeType ) {
@@ -32,7 +32,7 @@ function handleRunner( unit, mode ) {
 			}
 			tests++;
 			return new Promise( function( resolve, reject ) {
-				unit.runner( data, mode, resolve, reject );
+				unit.runner( data, iterator && require( `../lib/iterators/${iterator}` ), resolve, reject );
 			} ).then( ok ).then( null, nok );
 		} ) ).then( function() {
 			console.log(
@@ -57,9 +57,9 @@ module.exports = {
 	},
 	run: function() {
 		let chain = require( "../build" );
-		for ( let mode of require( "./modes" ) ) {
+		for ( let iterator of require( "./iterators" ) ) {
 			for ( let unit of data ) {
-				chain = chain.then( handleRunner( unit, mode ) );
+				chain = chain.then( handleRunner( unit, iterator ) );
 			}
 		}
 		return chain.then( function() {

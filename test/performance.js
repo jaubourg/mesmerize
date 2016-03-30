@@ -21,9 +21,9 @@ function standard( options ) {
 const libs = {
 	"file-type": standard(),
 };
-require( "./modes" ).forEach( function( mode ) {
-	libs[ `~${mode || "DEFAULT"}` ] = standard( mode && {
-		mode: mode
+require( "./iterators" ).forEach( function( name ) {
+	libs[ `~${name || "DEFAULT"}` ] = standard( name && {
+		iterator: require( `../lib/iterators/${name}` )
 	} );
 } );
 

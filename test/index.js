@@ -6,18 +6,18 @@ const mesmerize = require( ".." );
 const test = require( "./test" );
 
 test
-	.unit( "entire buffer", function( data, mode, resolve, reject ) {
+	.unit( "entire buffer", function( data, iterator, resolve, reject ) {
 		fs.readFile( data.path, function( error, buffer ) {
 			if ( error ) {
 				reject( error );
 			} else {
 				resolve( mesmerize( buffer, {
-					mode: mode
+					iterator: iterator
 				} ) );
 			}
 		} );
 	} )
-	.unit( "streaming", function( data, mode, resolve, reject ) {
+	.unit( "streaming", function( data, iterator, resolve, reject ) {
 		let count = 0;
 		let mimetype;
 		function handlerFactory( expectedCount ) {
@@ -48,7 +48,7 @@ test
 		}
 		mesmerize.stream( fs.createReadStream( data.path ), {
 			callback: handlerFactory( 0 ),
-			mode: mode,
+			iterator: iterator,
 			queue: true
 		} ).on( "mimetype", handlerFactory( 1 ) )
 			.once( "data", done )

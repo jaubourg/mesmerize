@@ -2,8 +2,8 @@
 
 module.exports = require( "fs" ).readdirSync( `${__dirname}/../lib/iterators` ).map( function( name ) {
 	return name.replace( /\.js$/, "" );
-} ).filter( function( mode ) {
-	return mode !== "function";
+} ).filter( function( name ) {
+	return name !== "function";
 } );
 
 module.exports.unshift( null );
