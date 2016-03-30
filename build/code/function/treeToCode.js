@@ -6,7 +6,7 @@ function generateCase( data, noEmptyReturn ) {
 	if ( typeof data === "string" ) {
 		return `callback( ${JSON.stringify( data ) } );${ noEmptyReturn ? "" : "\nreturn;" }`;
 	}
-	return `return f_${data.number}`;
+	return `return f_${data.number};`;
 }
 
 function generateBody( data ) {
