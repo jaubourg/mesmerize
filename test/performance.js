@@ -69,11 +69,11 @@ Object.getOwnPropertyNames( libs ).forEach( function( name, index ) {
 		files.forEach( iteration );
 		i++;
 		if ( timerCounts.has( i ) ) {
-			const micro = ( time[ 0 ] * 1000 + time[ 1 ] / 1000 ) / i;
+			const micro = ( time[ 0 ] * 1000 + time[ 1 ] / 1000 ) / i / files.length;
 			if ( !index || micro < minTimes[ scaleTimers.length ] ) {
 				minTimes[ scaleTimers.length ] = micro;
 			}
-			scaleTimers.push( ( time[ 0 ] * 1000 + time[ 1 ] / 1000 ) / i );
+			scaleTimers.push( micro );
 		}
 	}
 	times.push( {
@@ -95,7 +95,6 @@ runCounts.forEach( function( count, timeIndex ) {
 		const time = data.time[ timeIndex ];
 		const output = [
 			`${data.library}`,
-			( time / 1000 ).toFixed( 2 ) + "ms",
 			time.toFixed( 2 ) + "µs",
 			time === minTimes[ timeIndex ] ?
 				"BEST" :
